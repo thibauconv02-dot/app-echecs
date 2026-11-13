@@ -43,9 +43,12 @@ interface BoardProps {
   lastMove?: { from: string; to: string } | null
   arrows?: Arrow[]
   width?: number
+  /** Unique id when several boards are on the same page. */
+  id?: string
+  showNotation?: boolean
 }
 
-export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [], width = 560 }: BoardProps) {
+export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [], width = 560, id = 'main-board', showNotation = true }: BoardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const interactive = Boolean(onMove)
 
@@ -108,7 +111,7 @@ export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [
     <div className="board-frame" style={{ width, height: width }} data-testid="board">
       <Chessboard
         options={{
-          id: 'main-board',
+          id,
           position: fen,
           boardOrientation: orientation,
           pieces: cburnettPieces,
@@ -116,7 +119,7 @@ export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [
           darkSquareStyle: { backgroundColor: BOARD_COLORS.dark },
           lightSquareNotationStyle: { color: BOARD_COLORS.dark },
           darkSquareNotationStyle: { color: BOARD_COLORS.light },
-          showNotation: true,
+          showNotation,
           squareStyles,
           arrows,
           allowDrawingArrows: true,

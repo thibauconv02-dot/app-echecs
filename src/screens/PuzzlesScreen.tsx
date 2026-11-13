@@ -136,66 +136,156 @@ export function PuzzlesScreen({ onOpenGame }: { onOpenGame: (gameId: string) => 
   const counts = deckCounts(selected, reviews, now)
   const dueCount = session.filter((p) => reviews.has(p.id)).length
 
-  return (
-    <div className="trainer-menu">
-      <h2>Puzzles de mes parties</h2>
+  const all = deckCounts(puzzles, reviews, now)
+  const typeCount = (t: PuzzleType) => puzzles.filter((p) => p.type === t).length
+  const startScheduled = () =>
+    setState({ kind: 'session', items: session.map((puzzle) => ({ puzzle, scheduled: true })), index: 0, results: new Map(), finished: false })
+  const startFree = () =>
+    setState({
+      kind: 'session',
+      items: [...selected].sort(() => Math.random() - 0.5).map((puzzle) => ({ puzzle, scheduled: false })),
+      index: 0,
+      results: new Map(),
+      finished: false,
+    })
 
-      <div className="create-box">
-        <button onClick={create} disabled={batchState.running || importing !== null} data-testid="create-puzzles">
-          Créer des puzzles avec mes
-        </button>
+  const createPanel = (
+    <div className="create-panel">
+      <div className="create-panel-title">Nouveaux puzzles</div>
+      <p className="muted small">
+        Récupère tes dernières parties rapides sur Chess.com et en tire des puzzles. Environ 10 s par partie ; les parties déjà traitées sont sautées.
+      </p>
+      <div className="create-row">
+        <span>Mes</span>
         <input type="number" min={1} max={2000} value={count} onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))} data-testid="puzzle-count" />
-        <span>dernières parties rapides</span>
-        <span className="muted small">(environ 10 s par partie ; les parties déjà traitées sont sautées)</span>
+        <span>dernières parties</span>
+        <button className={puzzles.length ? '' : 'primary'} onClick={create} disabled={batchState.running || importing !== null} data-testid="create-puzzles">
+          {batchState.running ? 'Création en cours…' : 'Créer'}
+        </button>
       </div>
-      {importing && <p className="info">{importing}</p>}
+      {importing && <p className="info small">{importing}</p>}
+    </div>
+  )
 
-      <div className="toolbar">
-        <select value={type} onChange={(e) => setType(e.target.value)} data-testid="filter-type">
-          <option value={ALL}>Tous les types</option>
-          {Object.entries(TYPE_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v} ({puzzles.filter((p) => p.type === k).length})</option>
+  if (puzzles.length === 0) {
+    return (
+      <div className="deck-page">
+        <header className="deck-header">
+          <h2>Puzzles de mes parties</h2>
+          <p className="muted">Entraîne-toi sur tes propres positions : punir les grosses erreurs adverses et éviter tes gaffes.</p>
+        </header>
+        <div className="empty-state">
+          <div className="empty-icon">♞</div>
+          <h3>Pas encore de puzzles</h3>
+          <p className="muted">
+            Lance la création : l’appli analyse tes parties en arrière-plan et garde seulement les moments où l’écart entre ton coup et le bon coup
+            était net.
+          </p>
+          {createPanel}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="deck-page">
+      <header className="deck-header">
+        <h2>Puzzles de mes parties</h2>
+        <p className="muted">
+          {all.total} puzzles · <strong className={all.due ? 'due' : ''}>{all.due} à réviser aujourd’hui</strong> · {all.fresh} jamais vus ·{' '}
+          {all.learned} acquis
+        </p>
+      </header>
+
+      <div className="puzzle-top">
+        <div className="type-cards">
+          {([
+            ['punish', 'Punis la gaffe', 'L’adversaire a fait une grosse erreur et tu ne l’as pas punie.', '♛'],
+            ['avoid', 'Évite la gaffe', 'Tu as gaffé dans la partie : trouve le coup qu’il fallait jouer.', '⚠'],
+          ] as const).map(([t, label, text, icon]) => (
+            <div
+              key={t}
+              role="button"
+              tabIndex={0}
+              aria-pressed={type === t}
+              className={`type-card ${t} ${type === t ? 'selected' : ''}`}
+              onClick={() => setType(type === t ? ALL : t)}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setType(type === t ? ALL : t)}
+              data-testid={`type-${t}`}
+            >
+              <div className="type-card-icon">{icon}</div>
+              <div>
+                <div className="type-card-title">
+                  {label} <span className="type-card-count">{typeCount(t)}</span>
+                </div>
+                <div className="muted small">{text}</div>
+              </div>
+            </div>
           ))}
-        </select>
-        <select value={phase} onChange={(e) => setPhase(e.target.value)}>
-          <option value={ALL}>Toutes les phases</option>
-          {(Object.keys(PHASE_LABELS) as Phase[]).map((k) => (
-            <option key={k} value={k}>{PHASE_LABELS[k]} ({puzzles.filter((p) => p.phase === k).length})</option>
+        </div>
+        {createPanel}
+      </div>
+
+      <div className="filter-row">
+        <div className="chips" role="group" aria-label="Phase">
+          {[[ALL, 'Toutes les phases'] as const, ...(Object.keys(PHASE_LABELS) as Phase[]).map((k) => [k, PHASE_LABELS[k]] as const)].map(([k, label]) => (
+            <button key={k} className={`chip ${phase === k ? 'active' : ''}`} onClick={() => setPhase(k)}>
+              {label}
+              {k !== ALL && <span className="chip-count">{puzzles.filter((p) => p.phase === k).length}</span>}
+            </button>
           ))}
-        </select>
-        <select value={family} onChange={(e) => setFamily(e.target.value)}>
+        </div>
+        <select value={family} onChange={(e) => setFamily(e.target.value)} aria-label="Ouverture">
           <option value={ALL}>Toutes les ouvertures</option>
           {families.map(([f, n]) => (
-            <option key={f} value={f}>{f} ({n})</option>
+            <option key={f} value={f}>
+              {f} ({n})
+            </option>
           ))}
         </select>
-      </div>
-
-      <div className="cards" data-testid="puzzle-counts">
-        <div className="card"><div className="card-label">Puzzles</div><div className="card-value">{counts.total}</div></div>
-        <div className="card"><div className="card-label">À réviser</div><div className="card-value">{counts.due}</div></div>
-        <div className="card"><div className="card-label">Jamais vus</div><div className="card-value">{counts.fresh}</div></div>
-        <div className="card"><div className="card-label">Acquis</div><div className="card-value">{counts.learned}</div></div>
-      </div>
-
-      <div className="start-box">
-        {session.length > 0 ? (
-          <button className="primary big" onClick={() => setState({ kind: 'session', items: session.map((puzzle) => ({ puzzle, scheduled: true })), index: 0, results: new Map(), finished: false })} data-testid="start-puzzles">
-            Commencer : {session.length} puzzle(s) — {dueCount} à réviser, {session.length - dueCount} nouveau(x)
-          </button>
-        ) : (
-          <p>{counts.total ? 'Rien à réviser aujourd’hui pour cette sélection.' : 'Pas encore de puzzles : clique sur « Créer des puzzles ».'}</p>
-        )}
-        {selected.length > 0 && (
-          <button onClick={() => setState({ kind: 'session', items: [...selected].sort(() => Math.random() - 0.5).map((puzzle) => ({ puzzle, scheduled: false })), index: 0, results: new Map(), finished: false })}>
-            Entraînement libre ({selected.length} puzzles)
+        {type !== ALL && (
+          <button className="chip active" onClick={() => setType(ALL)}>
+            {TYPE_LABELS[type as PuzzleType]} ✕
           </button>
         )}
       </div>
-      <p className="muted small">
-        « Punis la gaffe » : l’adversaire a fait une grosse erreur et tu ne l’as pas punie. « Évite la gaffe » : tu as gaffé dans la partie. Seuls
-        les écarts nets (au moins 20 % de chances de gain entre le bon coup et le tien) deviennent des puzzles. Un coup presque aussi bon que celui de
-        Stockfish est accepté. Répétition espacée comme pour les ouvertures.
+
+      <div className="start-panel" data-testid="puzzle-counts">
+        <div className="start-panel-stats">
+          <div>
+            <strong>{counts.total}</strong>
+            <span>puzzles</span>
+          </div>
+          <div className={counts.due ? 'due' : ''}>
+            <strong>{counts.due}</strong>
+            <span>à réviser</span>
+          </div>
+          <div>
+            <strong>{counts.fresh}</strong>
+            <span>jamais vus</span>
+          </div>
+          <div>
+            <strong>{counts.learned}</strong>
+            <span>acquis</span>
+          </div>
+        </div>
+        <div className="start-panel-actions">
+          {session.length > 0 ? (
+            <button className="primary big" onClick={startScheduled} data-testid="start-puzzles">
+              Commencer · {session.length} puzzle(s)
+              <span className="btn-sub">
+                {dueCount} à réviser, {session.length - dueCount} nouveau(x)
+              </span>
+            </button>
+          ) : (
+            <p className="nothing-due">{counts.total ? '✓ Rien à réviser aujourd’hui pour cette sélection.' : 'Aucun puzzle pour ces filtres.'}</p>
+          )}
+          {selected.length > 0 && <button onClick={startFree}>Entraînement libre ({selected.length})</button>}
+        </div>
+      </div>
+      <p className="muted small deck-help">
+        Seuls les écarts nets (au moins 20 % de chances de gain entre le bon coup et le tien) deviennent des puzzles. Un coup presque aussi bon que
+        celui de Stockfish est accepté. Répétition espacée comme pour les ouvertures ; au plus {NEW_PUZZLES_PER_SESSION} nouveaux puzzles par session.
       </p>
     </div>
   )
