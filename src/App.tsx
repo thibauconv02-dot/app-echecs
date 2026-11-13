@@ -23,7 +23,10 @@ export default function App() {
   return (
     <div className="app">
       <nav className="tabs">
-        <strong className="brand">♞ Entraîneur</strong>
+        <span className="brand">
+          <span className="brand-icon">♞</span>
+          Entraîneur d’échecs
+        </span>
         {TABS.map((t) => (
           <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => {
               setTab(t.id)

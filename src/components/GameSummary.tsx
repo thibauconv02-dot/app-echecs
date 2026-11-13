@@ -2,7 +2,7 @@ import { CATEGORY_INFO } from '../config/classification'
 import { summarize, type MoveCategory, type MoveClassification } from '../lib/classify'
 import { MoveBadge } from './MoveBadge'
 
-const ORDER: MoveCategory[] = ['theory', 'best', 'good', 'mistake', 'blunder']
+const ORDER: MoveCategory[] = ['best', 'good', 'mistake', 'blunder']
 
 export function GameSummary({ moves, myColor, names }: { moves: MoveClassification[]; myColor: 'white' | 'black'; names: Record<'white' | 'black', string> }) {
   const sides: ('white' | 'black')[] = myColor === 'white' ? ['white', 'black'] : ['black', 'white']

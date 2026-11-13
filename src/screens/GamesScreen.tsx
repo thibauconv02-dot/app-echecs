@@ -124,7 +124,9 @@ export function GamesScreen({ onOpen }: { onOpen: (id: string) => void }) {
               return (
                 <tr key={g.id} onClick={() => onOpen(g.id)} className="clickable">
                   <td>{new Date(g.endTime * 1000).toLocaleDateString('fr-FR')}</td>
-                  <td>{g.myColor === 'white' ? '○ Blancs' : '● Noirs'}</td>
+                  <td>
+                    <span className={`side-dot ${g.myColor}`} /> {g.myColor === 'white' ? 'Blancs' : 'Noirs'}
+                  </td>
                   <td>
                     {opp.username} ({opp.rating}) <span className="muted">— moi {me.rating}</span>
                   </td>

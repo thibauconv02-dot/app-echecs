@@ -94,7 +94,7 @@ export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [
   }
 
   return (
-    <div style={{ width, height: width }} data-testid="board">
+    <div className="board-frame" style={{ width, height: width }} data-testid="board">
       <Chessboard
         options={{
           id: 'main-board',
