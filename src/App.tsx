@@ -6,6 +6,7 @@ import { GameViewScreen } from './screens/GameViewScreen'
 import { PuzzlesScreen } from './screens/PuzzlesScreen'
 import { TrainerScreen } from './screens/TrainerScreen'
 import { BatchStatus } from './components/BatchStatus'
+import { SoundToggle } from './components/SoundToggle'
 
 type Tab = 'trainer' | 'puzzles' | 'free' | 'games' | 'about'
 
@@ -35,7 +36,9 @@ export default function App() {
             {t.label}
           </button>
         ))}
+        <span className="spacer" />
         <BatchStatus />
+        <SoundToggle />
       </nav>
       <main>
         {tab === 'games' && !openGame && <GamesScreen onOpen={setOpenGame} />}

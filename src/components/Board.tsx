@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Chessboard, type Arrow, type PieceRenderObject } from 'react-chessboard'
 import { Chess, type Square } from 'chess.js'
+import { playMoveSound, soundForChange } from '../lib/sound'
 
 /** Lichess-like green & cream board (not Chess.com graphics). */
 export const BOARD_COLORS = {
@@ -49,6 +50,16 @@ export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [
   const interactive = Boolean(onMove)
 
   const chess = useMemo(() => new Chess(fen), [fen])
+
+  // Sound when the position changes by one move (played, replayed or navigated to).
+  const prevFen = useRef(fen)
+  useEffect(() => {
+    if (prevFen.current !== fen) {
+      const kind = soundForChange(prevFen.current, fen, chess.inCheck())
+      if (kind) playMoveSound(kind)
+      prevFen.current = fen
+    }
+  }, [fen, chess])
 
   const targets = useMemo(() => {
     if (!selected) return [] as string[]
