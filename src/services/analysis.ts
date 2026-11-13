@@ -59,10 +59,12 @@ export async function evaluateGame(
   game: Pick<GameRecord, 'initialFen' | 'sans'>,
   depth: number,
   onProgress?: (done: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<{ fens: string[]; evals: EngineEval[] }> {
   const fens = gameFens(game)
   const evals: EngineEval[] = []
   for (let i = 0; i < fens.length; i++) {
+    signal?.throwIfAborted()
     onProgress?.(i, fens.length)
     evals.push(await evaluatePosition(db, engine, fens[i], depth))
   }
@@ -81,8 +83,9 @@ export async function analyseGame(
   depth: number,
   onProgress?: (done: number, total: number) => void,
   repertoire?: RepertoireLookup,
+  signal?: AbortSignal,
 ): Promise<AnalysisRecord> {
-  const { fens, evals } = await evaluateGame(db, engine, game, depth, onProgress)
+  const { fens, evals } = await evaluateGame(db, engine, game, depth, onProgress, signal)
   const moves = classifyGame(fens, evals, game.sans, repertoire)
   const record: AnalysisRecord = {
     gameId: game.id,

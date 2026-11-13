@@ -3,11 +3,14 @@ import { FreePlayScreen } from './screens/FreePlayScreen'
 import { AboutScreen } from './screens/AboutScreen'
 import { GamesScreen } from './screens/GamesScreen'
 import { GameViewScreen } from './screens/GameViewScreen'
+import { StatsScreen } from './screens/StatsScreen'
+import { BatchStatus } from './components/BatchStatus'
 
-type Tab = 'free' | 'games' | 'about'
+type Tab = 'free' | 'games' | 'stats' | 'about'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'games', label: 'Mes parties' },
+  { id: 'stats', label: 'Statistiques' },
   { id: 'free', label: 'Jeu libre' },
   { id: 'about', label: 'À propos' },
 ]
@@ -27,10 +30,12 @@ export default function App() {
             {t.label}
           </button>
         ))}
+        <BatchStatus />
       </nav>
       <main>
         {tab === 'games' && !openGame && <GamesScreen onOpen={setOpenGame} />}
         {tab === 'games' && openGame && <GameViewScreen gameId={openGame} onBack={() => setOpenGame(null)} />}
+        {tab === 'stats' && <StatsScreen />}
         {tab === 'free' && <FreePlayScreen />}
         {tab === 'about' && <AboutScreen />}
       </main>

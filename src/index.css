@@ -60,3 +60,26 @@ main { padding: 20px; }
 .summary th.me { color: var(--accent); }
 .summary .accuracy { font-weight: 700; }
 .small { font-size: 12px; }
+.batch-status { margin-left: auto; display: flex; gap: 8px; align-items: center; color: #eeeed2; font-size: 13px; }
+.batch-status .dim { color: #b7c2a3; }
+.batch-status button { background: transparent; color: #eeeed2; border-color: #6b7a58; padding: 2px 8px; }
+.batch-form { display: flex; gap: 6px; align-items: center; }
+.batch-form input { width: 64px; font: inherit; padding: 5px; border: 1px solid var(--border); border-radius: 6px; }
+.toolbar select { font: inherit; padding: 5px; }
+.stats h2 { margin-top: 28px; }
+.cards { display: flex; gap: 12px; flex-wrap: wrap; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; min-width: 160px; }
+.card-label { color: var(--muted); font-size: 13px; }
+.card-value { font-size: 26px; font-weight: 700; }
+.time-stats { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px 12px 32px; line-height: 1.8; }
+.openings-table tr.variation td { color: #444; font-size: 13px; background: #fafaf6; }
+.openings-table tr.variation td:first-child { padding-left: 34px; }
+.openings-table td:first-child { max-width: 320px; }
+.caret { display: inline-block; width: 14px; color: var(--muted); }
+.good-score { color: #3a7d22; font-weight: 600; }
+.bad-score { color: #b22; font-weight: 600; }
+.phases { display: flex; gap: 6px; font-size: 12px; }
+.phase { padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.phase.opening { background: #efe4d3; }
+.phase.middlegame { background: #e2ebd5; }
+.phase.endgame { background: #dce6f0; }
