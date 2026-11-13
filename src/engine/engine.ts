@@ -1,24 +1,34 @@
-import { parseBestMove, parseInfo, type EngineEval } from './uci'
+import { parseBestMove, parseInfo, type EngineEval, type InfoLine } from './uci'
 
 const ENGINE_URL = `${import.meta.env.BASE_URL}stockfish/stockfish-19-lite-single.js`
+
+export interface AnalyseOptions {
+  /** Number of best lines to return (UCI MultiPV). Default 1. */
+  multiPv?: number
+  /** Restrict the search to these moves (UCI), e.g. to score the move actually played. */
+  searchMoves?: string[]
+}
+
+/** One principal variation; score from the side to move's point of view. */
+export type PvLine = Omit<InfoLine, 'multipv'> & { multipv: number }
 
 interface Job {
   fen: string
   depth: number
-  resolve: (e: EngineEval) => void
+  opts: AnalyseOptions
+  resolve: (lines: PvLine[]) => void
   reject: (err: Error) => void
 }
 
 /**
  * Stockfish running in a Web Worker (lite, single-thread WASM), driven over UCI.
- * Jobs are queued and processed one at a time. MultiPV 1.
+ * Jobs are queued and processed one at a time.
  */
 export class Engine {
   private worker: Worker
   private ready: Promise<void>
   private queue: Job[] = []
   private current: Job | null = null
-  private last: EngineEval | null = null
   private onLine: ((line: string) => void) | null = null
 
   constructor(url = ENGINE_URL) {
@@ -46,18 +56,24 @@ export class Engine {
     const uciok = this.waitFor((l) => l === 'uciok')
     this.worker.postMessage('uci')
     await uciok
-    this.worker.postMessage('setoption name MultiPV value 1')
     const readyok = this.waitFor((l) => l === 'readyok')
     this.worker.postMessage('isready')
     await readyok
   }
 
-  /** Evaluate a position to a fixed depth. Score is from the side to move's point of view. */
-  evaluate(fen: string, depth: number): Promise<EngineEval> {
+  /** Best lines of a position at a fixed depth (sorted best first). */
+  analyse(fen: string, depth: number, opts: AnalyseOptions = {}): Promise<PvLine[]> {
     return new Promise((resolve, reject) => {
-      this.queue.push({ fen, depth, resolve, reject })
+      this.queue.push({ fen, depth, opts, resolve, reject })
       void this.pump()
     })
+  }
+
+  /** Single best line (MultiPV 1), as used by game analysis. */
+  async evaluate(fen: string, depth: number): Promise<EngineEval> {
+    const [best] = await this.analyse(fen, depth)
+    if (!best) return { depth: 0, cp: null, mate: 0, bestMove: null, pv: [] }
+    return { depth: best.depth, cp: best.cp, mate: best.mate, bestMove: best.pv[0] ?? null, pv: best.pv }
   }
 
   private async pump() {
@@ -67,24 +83,25 @@ export class Engine {
     const job = this.queue.shift()
     if (!job) return
     this.current = job
-    this.last = null
+    const lines = new Map<number, PvLine>()
     this.onLine = (line) => {
       const info = parseInfo(line)
-      if (info && info.multipv === 1) {
-        this.last = { depth: info.depth, cp: info.cp, mate: info.mate, bestMove: info.pv[0] ?? null, pv: info.pv }
+      if (info) {
+        // Bound scores are provisional (aspiration window): wait for the exact one.
+        if (/ (lower|upper)bound/.test(line)) return
+        // Keep the latest complete line for each MultiPV slot.
+        if (info.pv.length) lines.set(info.multipv, info)
         return
       }
-      const best = parseBestMove(line)
-      if (best === undefined) return
-      const result: EngineEval = this.last
-        ? { ...this.last, bestMove: best ?? this.last.bestMove }
-        : { depth: 0, cp: null, mate: 0, bestMove: best, pv: [] }
+      if (parseBestMove(line) === undefined) return
       this.current = null
-      job.resolve(result)
+      job.resolve([...lines.values()].sort((a, b) => a.multipv - b.multipv))
       void this.pump()
     }
+    this.worker.postMessage(`setoption name MultiPV value ${job.opts.multiPv ?? 1}`)
     this.worker.postMessage(`position fen ${job.fen}`)
-    this.worker.postMessage(`go depth ${job.depth}`)
+    const search = job.opts.searchMoves?.length ? ` searchmoves ${job.opts.searchMoves.join(' ')}` : ''
+    this.worker.postMessage(`go depth ${job.depth}${search}`)
   }
 
   terminate() {
