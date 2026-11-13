@@ -83,3 +83,15 @@ main { padding: 20px; }
 .phase.opening { background: #efe4d3; }
 .phase.middlegame { background: #e2ebd5; }
 .phase.endgame { background: #dce6f0; }
+.trainer-menu { max-width: 900px; }
+.deck-table tr.selected td { background: #e7efd9; }
+.deck-table td.due { color: #b25d00; font-weight: 700; }
+.start-box { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 18px 0; }
+button.big { font-size: 17px; padding: 10px 18px; }
+.trainer-panel .chapter { margin: 4px 0 10px; }
+.trainer-feedback { min-height: 64px; padding: 10px 12px; border-radius: 6px; background: #f6f6f1; margin-bottom: 10px; }
+.trainer-feedback .ok { color: #3a7d22; font-weight: 600; }
+.trainer-feedback .ko { color: #9a3412; }
+.rep-comment { font-style: italic; color: #555; }
+.trainer-moves { padding-left: 28px; max-height: 300px; overflow-y: auto; }
+.trainer-moves .mine { font-weight: 700; }

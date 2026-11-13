@@ -87,7 +87,7 @@ export function Board({ fen, orientation = 'white', onMove, lastMove, arrows = [
     const capture = Boolean(chess.get(t as Square))
     squareStyles[t] = {
       ...squareStyles[t],
-      background: capture
+      backgroundImage: capture
         ? 'radial-gradient(transparent 0%, transparent 79%, rgba(20,85,0,0.35) 80%)'
         : 'radial-gradient(rgba(20,85,30,0.35) 19%, transparent 20%)',
     }

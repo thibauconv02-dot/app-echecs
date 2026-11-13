@@ -4,11 +4,13 @@ import { AboutScreen } from './screens/AboutScreen'
 import { GamesScreen } from './screens/GamesScreen'
 import { GameViewScreen } from './screens/GameViewScreen'
 import { StatsScreen } from './screens/StatsScreen'
+import { TrainerScreen } from './screens/TrainerScreen'
 import { BatchStatus } from './components/BatchStatus'
 
-type Tab = 'free' | 'games' | 'stats' | 'about'
+type Tab = 'trainer' | 'free' | 'games' | 'stats' | 'about'
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'trainer', label: 'Réviser mes ouvertures' },
   { id: 'games', label: 'Mes parties' },
   { id: 'stats', label: 'Statistiques' },
   { id: 'free', label: 'Jeu libre' },
@@ -16,7 +18,7 @@ const TABS: { id: Tab; label: string }[] = [
 ]
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('games')
+  const [tab, setTab] = useState<Tab>('trainer')
   const [openGame, setOpenGame] = useState<string | null>(null)
   return (
     <div className="app">
@@ -35,6 +37,7 @@ export default function App() {
       <main>
         {tab === 'games' && !openGame && <GamesScreen onOpen={setOpenGame} />}
         {tab === 'games' && openGame && <GameViewScreen gameId={openGame} onBack={() => setOpenGame(null)} />}
+        {tab === 'trainer' && <TrainerScreen />}
         {tab === 'stats' && <StatsScreen />}
         {tab === 'free' && <FreePlayScreen />}
         {tab === 'about' && <AboutScreen />}

@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { TimeClass } from '../config/settings'
 import type { MoveClassification } from '../lib/classify'
+import type { LineReview } from '../trainer/schedule'
 
 export type Outcome = 'win' | 'loss' | 'draw'
 
@@ -57,6 +58,7 @@ export class AppDB extends Dexie {
   archives!: EntityTable<ArchiveRecord, 'url'>
   evals!: EntityTable<EvalRecord, 'fen'>
   analyses!: EntityTable<AnalysisRecord, 'gameId'>
+  lineReviews!: EntityTable<LineReview, 'lineId'>
 
   constructor(name = 'app-echecs') {
     super(name)
@@ -69,6 +71,10 @@ export class AppDB extends Dexie {
     // v2: compound index for the paginated, filtered games list.
     this.version(2).stores({
       games: 'id, endTime, timeClass, myColor, outcome, eco, [timeClass+endTime]',
+    })
+    // v3: opening trainer (spaced repetition per repertoire line).
+    this.version(3).stores({
+      lineReviews: 'lineId, due',
     })
   }
 }
