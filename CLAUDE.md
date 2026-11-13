@@ -80,7 +80,7 @@ Règles :
 
 | Étiquette | Règle |
 |---|---|
-| Théorie | coup présent dans mon répertoire pour cette position |
+| ~~Théorie~~ | *non utilisée (abandonnée, voir feuille de route)* |
 | Meilleur | coup de Stockfish, ou perte ≤ 2 % |
 | Jouable | perte < 10 % |
 | Erreur | perte de 10 à 25 % |
@@ -94,7 +94,8 @@ Règles :
 On construit **une étape à la fois**, et chaque étape doit être utilisable seule.
 
 1. **Plateau et analyse** : échiquier jouable (on peut aussi jouer librement contre soi-même), import Chess.com, liste des parties, vue d'une partie avec barre d'évaluation, liste des coups avec badges de couleur par catégorie, flèche du meilleur coup sur les erreurs et gaffes, résumé (nombre de coups par catégorie, précision).
-2. **Répertoire** : chargement des PGN en arbre, étiquette « Théorie », détection de **sortie de répertoire** dans chaque partie (« ton adversaire sort au coup 6 » / « tu dévies au coup 8, le répertoire prévoit … »), stats par ouverture (score, précision, phase où tombent les gaffes), stats sur le temps (gaffes avec moins d'une minute à la pendule, coups critiques joués en moins de 5 s).
+2. **Statistiques** : analyse en arrière-plan des N dernières parties, stats par ouverture (ouverture indiquée par Chess.com via `ECO`/`ECOUrl` : score, précision, phase où tombent les gaffes), stats sur le temps (gaffes avec moins d'une minute à la pendule, coups critiques joués en moins de 5 s).
+   *Abandonné* : étiquette « Théorie » et détection de sortie de répertoire dans les parties. L'emplacement prévu (`src/repertoire/index.ts`) reste en place mais vide. La lecture des PGN en arbre est reportée à l'étape 4.
 3. **Puzzles de mes gaffes** : chaque erreur ou gaffe devient un exercice (position avant mon coup, solution = coup de Stockfish), classés par ouverture et par phase, révisés en **répétition espacée**.
 4. **Entraîneur d'ouvertures** : je joue mes coups du répertoire, l'appli joue les réponses adverses en parcourant toutes les branches, répétition espacée par ligne, filtre par ouverture.
 5. **Positions types** : à partir de `data/positions-types.json` : mode QCM « trouve le plan », puis mode « joue la position » contre Stockfish bridé (`UCI_LimitStrength` / `UCI_Elo`).
@@ -102,6 +103,6 @@ On construit **une étape à la fois**, et chaque étape doit être utilisable s
 ## Tests à prévoir dès le départ
 
 - Formule win% et seuils de classification (cas limites, positions de mat).
-- Lecture des trois PGN du répertoire : nombre de lignes attendu (Trompowsky 16, Caro-Kann 9, Ragozine 8) et un seul coup attendu par position pour ma couleur.
-- Transposition Caro-Kann ci-dessus : les deux ordres de coups mènent au même nœud.
+- *(étape 4)* Lecture des trois PGN du répertoire : nombre de lignes attendu (Trompowsky 16, Caro-Kann 9, Ragozine 8) et un seul coup attendu par position pour ma couleur.
+- *(étape 4)* Transposition Caro-Kann ci-dessus : les deux ordres de coups mènent au même nœud.
 - Extraction de `%clk` et de l'ouverture depuis un PGN Chess.com réel.
