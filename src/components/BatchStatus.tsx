@@ -13,7 +13,7 @@ export function BatchStatus() {
       <div className="batch-status" data-testid="batch-status">
         <progress value={pct} max={100} />
         <span>
-          Analyse {Math.min(s.done + 1, s.total)}/{s.total}
+          Puzzles : partie {Math.min(s.done + 1, s.total)}/{s.total}
           {s.currentLabel && <span className="dim"> · {s.currentLabel}</span>}
         </span>
         <button onClick={() => batch.stop()}>Arrêter</button>
@@ -24,10 +24,10 @@ export function BatchStatus() {
   return (
     <div className="batch-status" data-testid="batch-status">
       {s.error ? (
-        <span>Erreur d’analyse : {s.error}</span>
+        <span>Erreur pendant la création des puzzles : {s.error}</span>
       ) : (
         <span>
-          {s.finished!.stopped ? 'Analyse arrêtée' : 'Analyse terminée'} : {s.finished!.analysed} partie(s) analysée(s)
+          {s.finished!.stopped ? 'Création arrêtée' : 'Puzzles créés'} : {s.finished!.analysed} partie(s) traitée(s)
         </span>
       )}
       <button onClick={() => setDismissed(true)} aria-label="Fermer">✕</button>

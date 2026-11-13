@@ -95,3 +95,6 @@ button.big { font-size: 17px; padding: 10px 18px; }
 .rep-comment { font-style: italic; color: #555; }
 .trainer-moves { padding-left: 28px; max-height: 300px; overflow-y: auto; }
 .trainer-moves .mine { font-weight: 700; }
+.create-box { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.create-box input { width: 70px; font: inherit; padding: 5px; border: 1px solid var(--border); border-radius: 6px; }
+.puzzle-explain { font-size: 14px; }

@@ -1,38 +1,40 @@
 import Dexie from 'dexie'
-import type { AppDB } from '../db/db'
-import { analyseGame, type Evaluator } from './analysis'
+import type { AppDB, GameRecord } from '../db/db'
 
 export interface BatchState {
   running: boolean
-  /** Games to analyse in this run (already analysed ones are excluded). */
+  /** Games to process in this run (already processed ones are excluded). */
   total: number
   done: number
   /** Progress inside the current game. */
   position: { done: number; total: number } | null
   currentLabel: string | null
   error: string | null
-  /** Set when the last run ended: how many games were analysed and whether it was stopped. */
+  /** Set when the last run ended: how many games were processed and whether it was stopped. */
   finished: { analysed: number; stopped: boolean } | null
 }
 
 const IDLE: BatchState = { running: false, total: 0, done: 0, position: null, currentLabel: null, error: null, finished: null }
 
+export type GameProcessor = (game: GameRecord, onProgress: (done: number, total: number) => void, signal: AbortSignal) => Promise<unknown>
+
 /**
- * Analyses the N most recent games of a time class, one after another, in the background.
- * Games already analysed at the requested depth are skipped. Each finished game is saved
- * immediately, so stopping loses at most the game in progress.
+ * Processes the N most recent games of a time class, one after another, in the background.
+ * Games already processed (`isDone`) are skipped. Each game is saved as soon as it is done,
+ * so stopping loses at most the game in progress.
  */
 export class BatchAnalyser {
   private state: BatchState = IDLE
   private listeners = new Set<(s: BatchState) => void>()
   private abort: AbortController | null = null
-
   private db: AppDB
-  private engine: () => Evaluator
+  private process: GameProcessor
+  private isDone: (g: GameRecord) => boolean
 
-  constructor(db: AppDB, engine: () => Evaluator) {
+  constructor(db: AppDB, process: GameProcessor, isDone: (g: GameRecord) => boolean) {
     this.db = db
-    this.engine = engine
+    this.process = process
+    this.isDone = isDone
   }
 
   getState(): BatchState {
@@ -49,24 +51,24 @@ export class BatchAnalyser {
     this.listeners.forEach((fn) => fn(this.state))
   }
 
-  /** Ids of the `count` most recent games of `timeClass` ('all' = every class) still to analyse. */
-  async pendingGames(count: number, timeClass: string, depth: number): Promise<string[]> {
+  /** Ids of the `count` most recent games of `timeClass` ('all' = every class) still to process. */
+  async pendingGames(count: number, timeClass: string): Promise<string[]> {
     const collection =
       timeClass === 'all'
         ? this.db.games.orderBy('endTime')
         : this.db.games.where('[timeClass+endTime]').between([timeClass, Dexie.minKey], [timeClass, Dexie.maxKey])
     const recent = await collection.reverse().limit(count).toArray()
-    return recent.filter((g) => (g.analysedDepth ?? 0) < depth).map((g) => g.id)
+    return recent.filter((g) => !this.isDone(g)).map((g) => g.id)
   }
 
-  async start(count: number, timeClass: string, depth: number): Promise<void> {
+  async start(count: number, timeClass: string): Promise<void> {
     if (this.state.running) return
     const abort = new AbortController()
     this.abort = abort
     this.set({ ...IDLE, running: true })
     let analysed = 0
     try {
-      const ids = await this.pendingGames(count, timeClass, depth)
+      const ids = await this.pendingGames(count, timeClass)
       this.set({ total: ids.length })
       for (const id of ids) {
         if (abort.signal.aborted) break
@@ -74,7 +76,7 @@ export class BatchAnalyser {
         if (!game) continue
         const opp = game.myColor === 'white' ? game.black.username : game.white.username
         this.set({ currentLabel: `contre ${opp} (${new Date(game.endTime * 1000).toLocaleDateString('fr-FR')})`, position: null })
-        await analyseGame(this.db, this.engine(), game, depth, (done, total) => this.set({ position: { done, total } }), undefined, abort.signal)
+        await this.process(game, (done, total) => this.set({ position: { done, total } }), abort.signal)
         analysed++
         this.set({ done: analysed })
       }

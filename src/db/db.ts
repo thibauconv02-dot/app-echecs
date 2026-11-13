@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import type { TimeClass } from '../config/settings'
 import type { MoveClassification } from '../lib/classify'
 import type { LineReview } from '../trainer/schedule'
+import type { Puzzle } from '../puzzles/types'
 
 export type Outcome = 'win' | 'loss' | 'draw'
 
@@ -24,6 +25,8 @@ export interface GameRecord {
   clocks: (number | null)[]
   pgn: string
   analysedDepth: number | null
+  /** PUZZLE_VERSION the game was last scanned with for puzzles (undefined = never). */
+  puzzleVersion?: number
 }
 
 export interface ArchiveRecord {
@@ -59,6 +62,9 @@ export class AppDB extends Dexie {
   evals!: EntityTable<EvalRecord, 'fen'>
   analyses!: EntityTable<AnalysisRecord, 'gameId'>
   lineReviews!: EntityTable<LineReview, 'lineId'>
+  puzzles!: EntityTable<Puzzle, 'id'>
+  /** Spaced repetition of puzzles (lineId = puzzle id). */
+  puzzleReviews!: EntityTable<LineReview, 'lineId'>
 
   constructor(name = 'app-echecs') {
     super(name)
@@ -75,6 +81,11 @@ export class AppDB extends Dexie {
     // v3: opening trainer (spaced repetition per repertoire line).
     this.version(3).stores({
       lineReviews: 'lineId, due',
+    })
+    // v4: puzzles from my games.
+    this.version(4).stores({
+      puzzles: 'id, gameId, type, phase, family',
+      puzzleReviews: 'lineId, due',
     })
   }
 }

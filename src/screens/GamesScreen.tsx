@@ -3,9 +3,7 @@ import Dexie from 'dexie'
 import { db, type GameRecord } from '../db/db'
 import { importGames, type ImportProgress } from '../services/chesscom'
 import { CHESSCOM_USERNAME, DEFAULT_TIME_CLASS } from '../config/settings'
-import { BATCH_DEFAULT_COUNT } from '../config/stats'
-import { ANALYSIS_DEPTH } from '../config/classification'
-import { batch, useBatch } from '../services/batch'
+import { useBatch } from '../services/batch'
 
 const TIME_CLASS_LABELS: Record<string, string> = {
   all: 'Toutes',
@@ -34,7 +32,6 @@ export function GamesScreen({ onOpen }: { onOpen: (id: string) => void }) {
   const [progress, setProgress] = useState<ImportProgress | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [batchCount, setBatchCount] = useState(BATCH_DEFAULT_COUNT)
   const batchState = useBatch()
 
   const reload = useCallback(async () => {
@@ -94,24 +91,6 @@ export function GamesScreen({ onOpen }: { onOpen: (id: string) => void }) {
             ))}
           </select>
         </label>
-        <span className="batch-form">
-          <button
-            onClick={() => batch.start(batchCount, filter, ANALYSIS_DEPTH)}
-            disabled={batchState.running || total === 0}
-            data-testid="batch-start"
-          >
-            Analyser mes
-          </button>
-          <input
-            type="number"
-            min={1}
-            max={1000}
-            value={batchCount}
-            onChange={(e) => setBatchCount(Math.max(1, Number(e.target.value) || 1))}
-            data-testid="batch-count"
-          />
-          dernières parties
-        </span>
         <span className="muted" data-testid="count">{total} partie(s) — compte {CHESSCOM_USERNAME}</span>
       </div>
       {progress && (

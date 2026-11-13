@@ -3,16 +3,16 @@ import { FreePlayScreen } from './screens/FreePlayScreen'
 import { AboutScreen } from './screens/AboutScreen'
 import { GamesScreen } from './screens/GamesScreen'
 import { GameViewScreen } from './screens/GameViewScreen'
-import { StatsScreen } from './screens/StatsScreen'
+import { PuzzlesScreen } from './screens/PuzzlesScreen'
 import { TrainerScreen } from './screens/TrainerScreen'
 import { BatchStatus } from './components/BatchStatus'
 
-type Tab = 'trainer' | 'free' | 'games' | 'stats' | 'about'
+type Tab = 'trainer' | 'puzzles' | 'free' | 'games' | 'about'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'trainer', label: 'Réviser mes ouvertures' },
+  { id: 'puzzles', label: 'Puzzles' },
   { id: 'games', label: 'Mes parties' },
-  { id: 'stats', label: 'Statistiques' },
   { id: 'free', label: 'Jeu libre' },
   { id: 'about', label: 'À propos' },
 ]
@@ -38,7 +38,14 @@ export default function App() {
         {tab === 'games' && !openGame && <GamesScreen onOpen={setOpenGame} />}
         {tab === 'games' && openGame && <GameViewScreen gameId={openGame} onBack={() => setOpenGame(null)} />}
         {tab === 'trainer' && <TrainerScreen />}
-        {tab === 'stats' && <StatsScreen />}
+        {tab === 'puzzles' && (
+          <PuzzlesScreen
+            onOpenGame={(id) => {
+              setOpenGame(id)
+              setTab('games')
+            }}
+          />
+        )}
         {tab === 'free' && <FreePlayScreen />}
         {tab === 'about' && <AboutScreen />}
       </main>
