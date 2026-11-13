@@ -1,0 +1,14 @@
+[
+  {
+    "id": "tromp-c5-b2",
+    "ouverture": "Trompowsky",
+    "couleur": "white",
+    "fen": "rnb1kb1r/pp1ppp1p/1q3p2/2pP4/8/8/PPP1PPPP/RN1QKBNR w KQkq - 1 5",
+    "coupsAvant": "1.d4 Cf6 2.Fg5 c5 3.Fxf6 gxf6 4.d5 Db6",
+    "theme": "Faiblesse de b2",
+    "question": "La dame noire attaque b2. Comment le défends-tu ?",
+    "choix": ["5.Dc1", "5.b3", "5.Cd2", "5.Dd2"],
+    "bonneReponse": "5.Dc1",
+    "explication": "Le fou de cases noires a quitté c1 : b2 n'est plus protégé. 5.Dc1 défend b2 sans affaiblir la grande diagonale."
+  }
+]
